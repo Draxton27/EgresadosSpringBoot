@@ -11,5 +11,5 @@ import java.util.Optional;
 public class Posicion {
     private String posicionActual;
     private LocalDate fechaInicio;
-    private Optional<LocalDate> fechaTerminacion;
+    private LocalDate fechaTerminacion;
 }
