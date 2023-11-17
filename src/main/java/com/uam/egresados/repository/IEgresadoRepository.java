@@ -9,6 +9,6 @@ import java.util.List;
 
 @Repository
 public interface IEgresadoRepository extends JpaRepository<Egresado, String> {
-    @Query("select e from Egresado e where e.primerNombre = : nombre")
+    @Query("select e from Egresado e where e.primerNombre = :nombre")
     List<Egresado> findEgresadoByPrimerNombre(String nombre);
 }

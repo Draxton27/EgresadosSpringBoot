@@ -2,13 +2,17 @@ package com.uam.egresados.controller;
 
 import com.uam.egresados.model.Egresado;
 import com.uam.egresados.service.IServiceEgresado;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.logging.Logger;
 
 @RestController
 @RequestMapping("/egresado")
 public class EgresadoController {
+
+    @Autowired
     private IServiceEgresado serviceEgresado;
 
     @GetMapping("/all")

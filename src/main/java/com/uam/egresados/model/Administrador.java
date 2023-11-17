@@ -4,7 +4,7 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.Table;
 
 @Entity
-@Table(name = "ADMIN")
+@Table(name = "Administrador")
 public class Administrador extends Identity{
     private String nombreAdmin;
     private String contrasenia;

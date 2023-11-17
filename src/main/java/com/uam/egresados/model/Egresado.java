@@ -8,33 +8,36 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDate;
-import java.util.List;
+import java.util.Set;
 
 @Entity
-@Table(name = "EGRESADO")
+@Table(name = "Egresado")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 public class Egresado extends Identity{
+
     private String primerNombre;
     private String segundoNombre;
     private String primerApellido;
     private String segundoApellido;
     private LocalDate fechaNacimiento;
+
     private LocalDate fechaGraduacion;
     private Posicion cargoActual;
+    private String password;
 
     @ElementCollection
-    private List<Telefono> contactos;
+    private Set<Telefono> contactos;
 
     @ElementCollection
-    private List<Correo> correos;
+    private Set<Correo> correos;
 
     @ElementCollection
-    private List<Posicion> trabajos;
+    private Set<Posicion> trabajos;
 
     @ElementCollection
-    private List<Carrera> carreras;
+    private Set<Carrera> carreras;
     private Etnia etnia;
 
 }
