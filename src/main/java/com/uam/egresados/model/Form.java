@@ -9,7 +9,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.util.ArrayList;
+import java.util.List;
 
 @Data
 @AllArgsConstructor
@@ -18,6 +18,8 @@ import java.util.ArrayList;
 @Table(name = "Encuestas")
 public class Form extends Identity {
 
+    private String name;
+
     @ElementCollection
-    ArrayList<Question> questions;
+    private List<Question> questions;
 }

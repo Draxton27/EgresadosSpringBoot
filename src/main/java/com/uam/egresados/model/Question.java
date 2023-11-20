@@ -7,6 +7,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.util.ArrayList;
+import java.util.List;
 
 @Embeddable
 @Data
@@ -16,5 +17,6 @@ public class Question {
 
     private String question;
     private QuestionType type;
-    private ArrayList<String> answers;
+    private List<String> possible_answers;
+    private List<String> answers;
 }
