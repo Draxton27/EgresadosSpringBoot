@@ -37,6 +37,7 @@ public class EgresadoController {
 
     @PutMapping("/save")
     public Egresado update(@RequestBody Egresado egresado) {
+        System.out.println("Saving egresado " + egresado);
         return serviceEgresado.save(egresado);
     }
 

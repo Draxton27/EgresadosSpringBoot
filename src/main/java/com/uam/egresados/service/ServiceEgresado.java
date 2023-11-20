@@ -2,6 +2,7 @@ package com.uam.egresados.service;
 
 import com.uam.egresados.model.Egresado;
 import com.uam.egresados.repository.IEgresadoRepository;
+import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
@@ -22,11 +23,13 @@ public class ServiceEgresado implements IServiceEgresado{
     }
 
     @Override
+    @Transactional
     public Egresado save(Egresado egresado) {
-        return repo.save(egresado);
+        return repo.saveAndFlush(egresado);
     }
 
     @Override
+    @Transactional
     public void delete(String id) {
         repo.deleteById(id);
     }
