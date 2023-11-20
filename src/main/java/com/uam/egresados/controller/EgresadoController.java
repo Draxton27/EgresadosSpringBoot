@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.logging.Logger;
 
 @RestController
@@ -20,11 +21,15 @@ public class EgresadoController {
         return serviceEgresado.getAll();
     }
 
-    @GetMapping("/findByNombre")
-    public List<Egresado> findByNombre(@RequestParam(name = "nombre") String nombre) {
+    @GetMapping("/getByName")
+    public List<Egresado> findByNombre(@PathVariable(name = "name") String nombre) {
         return serviceEgresado.findByNombre(nombre);
     }
 
+    @GetMapping("/getById")
+    public Optional<Egresado> findById(@RequestParam(name = "id") String id) {
+        return serviceEgresado.findById(id);
+    }
     @PostMapping("/save")
     public Egresado insert(@RequestBody Egresado egresado) {
         return serviceEgresado.save(egresado);

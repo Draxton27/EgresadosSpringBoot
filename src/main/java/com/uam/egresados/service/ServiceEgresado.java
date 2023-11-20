@@ -9,6 +9,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 public class ServiceEgresado implements IServiceEgresado{
@@ -34,7 +35,10 @@ public class ServiceEgresado implements IServiceEgresado{
     public List<Egresado> findByNombre(String nombre) {
         return repo.findEgresadoByPrimerNombre(nombre);
     }
-
+    @Override
+    public Optional<Egresado> findById(String id) {
+        return repo.findById(id);
+    }
     @Override
     public List<Egresado> getAllPagination(Integer pageNo, Integer pageSize, String sortBy) {
         var pageable = PageRequest.of(pageNo, pageSize, Sort.by(sortBy));
