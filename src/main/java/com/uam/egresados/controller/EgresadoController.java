@@ -22,7 +22,7 @@ public class EgresadoController {
     }
 
     @GetMapping("/getByName")
-    public List<Egresado> findByNombre(@PathVariable(name = "name") String nombre) {
+    public List<Egresado> findByNombre(@RequestParam(name = "name") String nombre) {
         return serviceEgresado.findByNombre(nombre);
     }
 
