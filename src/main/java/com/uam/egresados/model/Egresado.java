@@ -26,6 +26,7 @@ public class Egresado extends Identity{
     private LocalDate fechaGraduacion;
     private Posicion cargoActual;
     private String password;
+    private String logInEmail;
 
     @ElementCollection
     private Set<Telefono> contactos;

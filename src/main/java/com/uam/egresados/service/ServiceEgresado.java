@@ -38,6 +38,12 @@ public class ServiceEgresado implements IServiceEgresado{
     public List<Egresado> findByPrimerNombre(String nombre) {
         return repo.findEgresadoByPrimerNombre(nombre);
     }
+
+    @Override
+    public List<Egresado> findByCorreosAndPassword(String email, String password) {
+        return repo.findEgresadoByCorreosAndPassword(email,password);
+    }
+
     @Override
     public Optional<Egresado> findById(String id) {
         return repo.findById(id);

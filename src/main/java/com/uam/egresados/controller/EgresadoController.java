@@ -1,8 +1,10 @@
 package com.uam.egresados.controller;
 
+import com.uam.egresados.model.Access;
 import com.uam.egresados.model.Egresado;
 import com.uam.egresados.service.IServiceEgresado;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.repository.query.Param;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -37,9 +39,16 @@ public class EgresadoController {
 
     @PutMapping("/save")
     public Egresado update(@RequestBody Egresado egresado) {
-        System.out.println("Saving egresado " + egresado);
+
         return serviceEgresado.save(egresado);
     }
+
+    @GetMapping("/login")
+    public boolean login (@RequestBody Access login){
+
+        return !(serviceEgresado.findByCorreosAndPassword(login.getEmail(), login.getPassword())).isEmpty();
+    }
+
 
     @DeleteMapping("/delete/{id}")
     public void delete(@PathVariable(name = "id") String id) {
