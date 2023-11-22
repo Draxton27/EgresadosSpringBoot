@@ -22,8 +22,8 @@ public class EgresadoController {
     }
 
     @GetMapping("/getByName")
-    public List<Egresado> findByNombre(@RequestParam(name = "name") String nombre) {
-        return serviceEgresado.findByNombre(nombre);
+    public List<Egresado> findByNombre(@RequestParam(name = "primerNombre") String nombre) {
+        return serviceEgresado.findByPrimerNombre(nombre);
     }
 
     @GetMapping("/getById")

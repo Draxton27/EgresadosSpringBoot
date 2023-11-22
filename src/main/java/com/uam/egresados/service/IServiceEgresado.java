@@ -12,7 +12,8 @@ public interface IServiceEgresado {
 
     public void delete(String id);
 
-    List<Egresado> findByNombre(String nombre);
+    List<Egresado> findByPrimerNombre(String nombre);
+
     List<Egresado> getAllPagination(Integer pageNo, Integer pageSize, String sortBy);
 
      Optional<Egresado> findById(String id);
