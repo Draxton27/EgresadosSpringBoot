@@ -2,15 +2,14 @@ package com.uam.egresados.controller;
 
 import com.uam.egresados.model.Access;
 import com.uam.egresados.model.Egresado;
-import com.uam.egresados.repository.IEgresadoRepository;
 import com.uam.egresados.service.IServiceEgresado;
+import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.repository.query.Param;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.Optional;
-import java.util.logging.Logger;
 
 @RestController
 @RequestMapping("/egresado")
@@ -18,8 +17,7 @@ public class EgresadoController {
 
     @Autowired
     private IServiceEgresado serviceEgresado;
-    @Autowired
-    private IEgresadoRepository iEgresadoRepository;
+
 
     @GetMapping("/all")
     List<Egresado> getAll() {
@@ -47,14 +45,17 @@ public class EgresadoController {
     }
 
     @GetMapping("/login")
-    public String login (@RequestBody Access login){
+    public String login (@RequestBody Access login, HttpServletResponse response){
         var egresado = serviceEgresado.findByCorreosAndPassword(login.getEmail(), login.getPassword());
 
         if(egresado.isEmpty()) {
-            return "";
+            return "Acceso denegado";
         }
 
-        return egresado.get().getId();
+        var cookie = new Cookie("id", egresado.get().getId());
+        response.addCookie(cookie);
+
+        return "Acceso permitido";
     }
 
 

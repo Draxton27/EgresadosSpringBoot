@@ -6,6 +6,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Optional;
+
 @Service
 public class ServiceAdministrador implements IServiceAdministrador{
 
@@ -18,7 +20,12 @@ public class ServiceAdministrador implements IServiceAdministrador{
     }
 
     @Override
-    public List<Administrador> findBynombreAdminAndcontrasenia(String nombreAdmin, String contrsenia) {
+    public Optional<Administrador> findBynombreAdminAndcontrasenia(String nombreAdmin, String contrsenia) {
         return repo.findAdministradorBynombreAdminAndcontrasenia(nombreAdmin,contrsenia);
+    }
+
+    @Override
+    public Administrador save(Administrador admin) {
+        return repo.saveAndFlush(admin);
     }
 }
