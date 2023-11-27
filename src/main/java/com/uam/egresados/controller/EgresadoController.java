@@ -11,6 +11,8 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 import java.util.Optional;
 
+import static com.uam.egresados.WebConfig.REACT_URL;
+
 @RestController
 @RequestMapping("/egresado")
 public class EgresadoController {
@@ -44,20 +46,16 @@ public class EgresadoController {
         return serviceEgresado.save(egresado);
     }
 
-    @GetMapping("/login")
-    public String login (@RequestBody Access login, HttpServletResponse response){
+    @PostMapping("/login")
+    public String login (@RequestBody Access login){
         var egresado = serviceEgresado.findByCorreosAndPassword(login.getEmail(), login.getPassword());
 
         if(egresado.isEmpty()) {
-            return "Acceso denegado";
+            return "";
         }
 
-        var cookie = new Cookie("id", egresado.get().getId());
-        response.addCookie(cookie);
-
-        return "Acceso permitido";
+        return egresado.get().getId();
     }
-
 
     @DeleteMapping("/delete/{id}")
     public void delete(@PathVariable(name = "id") String id) {

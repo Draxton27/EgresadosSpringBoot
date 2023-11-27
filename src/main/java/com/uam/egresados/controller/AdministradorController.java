@@ -2,7 +2,7 @@ package com.uam.egresados.controller;
 
 import com.uam.egresados.model.Access;
 import com.uam.egresados.model.Administrador;
-import com.uam.egresados.model.Egresado;
+import java.util.List;
 import com.uam.egresados.service.IServiceAdministrador;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletResponse;
@@ -16,15 +16,19 @@ public class AdministradorController {
     @Autowired
     private IServiceAdministrador serviceAdministrador;
 
-    @GetMapping("/login")
+    @GetMapping("/all")
+    public List<Administrador> getAll() {
+        return serviceAdministrador.getAll();
+    }
+
+
+    @PostMapping("/login")
     public String login (@RequestBody Access login, HttpServletResponse response){
         var admin = serviceAdministrador.findBynombreAdminAndcontrasenia(login.getEmail(), login.getPassword());
 
         if(admin.isEmpty()) {
-            return "Acceso denegado";
+            return "";
         }
-        var cookie = new Cookie("id", admin.get().getId());
-        response.addCookie(cookie);
 
         return "Acceso permitido";
     }

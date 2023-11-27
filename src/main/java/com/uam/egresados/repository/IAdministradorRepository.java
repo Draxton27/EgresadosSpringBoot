@@ -15,5 +15,4 @@ public interface IAdministradorRepository extends JpaRepository<Administrador, S
     Optional<Administrador> findAdministradorBynombreAdminAndcontrasenia(String nombreAdmin , String contrasenia);
 
 
-
 }

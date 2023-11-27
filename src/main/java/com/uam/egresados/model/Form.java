@@ -22,4 +22,7 @@ public class Form extends Identity {
 
     @ElementCollection
     private List<Question> questions;
+
+    @ElementCollection
+    private List<String> answersCollectedFrom;
 }
