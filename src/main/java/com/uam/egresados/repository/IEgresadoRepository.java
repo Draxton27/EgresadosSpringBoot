@@ -7,6 +7,7 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface IEgresadoRepository extends JpaRepository<Egresado, String> {
@@ -14,5 +15,5 @@ public interface IEgresadoRepository extends JpaRepository<Egresado, String> {
     List<Egresado> findEgresadoByPrimerNombre(String primerNombre);
 
     @Query("select e from Egresado e where e.logInEmail = :email and e.password = :password")
-    List<Egresado> findEgresadoByCorreosAndPassword(String email ,String password);
+    Optional<Egresado> findEgresadoByCorreosAndPassword(String email , String password);
 }

@@ -40,7 +40,7 @@ public class ServiceEgresado implements IServiceEgresado{
     }
 
     @Override
-    public List<Egresado> findByCorreosAndPassword(String email, String password) {
+    public Optional<Egresado> findByCorreosAndPassword(String email, String password) {
         return repo.findEgresadoByCorreosAndPassword(email,password);
     }
 

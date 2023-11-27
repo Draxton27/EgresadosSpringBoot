@@ -14,7 +14,7 @@ public interface IServiceEgresado {
 
     List<Egresado> findByPrimerNombre(String nombre);
 
-    List<Egresado> findByCorreosAndPassword(String email, String password);
+    Optional<Egresado> findByCorreosAndPassword(String email, String password);
 
     List<Egresado> getAllPagination(Integer pageNo, Integer pageSize, String sortBy);
 

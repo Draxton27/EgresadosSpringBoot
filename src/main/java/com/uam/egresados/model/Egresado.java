@@ -42,5 +42,4 @@ public class Egresado extends Identity{
     private Etnia etnia;
 
     private Boolean aprobado;
-
 }

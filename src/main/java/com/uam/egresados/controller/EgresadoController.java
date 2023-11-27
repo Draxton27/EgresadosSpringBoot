@@ -2,6 +2,7 @@ package com.uam.egresados.controller;
 
 import com.uam.egresados.model.Access;
 import com.uam.egresados.model.Egresado;
+import com.uam.egresados.repository.IEgresadoRepository;
 import com.uam.egresados.service.IServiceEgresado;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.repository.query.Param;
@@ -17,6 +18,8 @@ public class EgresadoController {
 
     @Autowired
     private IServiceEgresado serviceEgresado;
+    @Autowired
+    private IEgresadoRepository iEgresadoRepository;
 
     @GetMapping("/all")
     List<Egresado> getAll() {
@@ -44,9 +47,14 @@ public class EgresadoController {
     }
 
     @GetMapping("/login")
-    public boolean login (@RequestBody Access login){
+    public String login (@RequestBody Access login){
+        var egresado = serviceEgresado.findByCorreosAndPassword(login.getEmail(), login.getPassword());
 
-        return !(serviceEgresado.findByCorreosAndPassword(login.getEmail(), login.getPassword())).isEmpty();
+        if(egresado.isEmpty()) {
+            return "";
+        }
+
+        return egresado.get().getId();
     }
 
 
