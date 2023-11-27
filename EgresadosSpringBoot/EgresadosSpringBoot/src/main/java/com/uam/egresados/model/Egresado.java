@@ -22,11 +22,10 @@ public class Egresado extends Identity{
     private String primerApellido;
     private String segundoApellido;
     private LocalDate fechaNacimiento;
-    private String cif;
+
     private LocalDate fechaGraduacion;
     private Posicion cargoActual;
     private String password;
-    private String logInEmail;
 
     @ElementCollection
     private Set<Telefono> contactos;
@@ -40,7 +39,5 @@ public class Egresado extends Identity{
     @ElementCollection
     private Set<Carrera> carreras;
     private Etnia etnia;
-
-    private Boolean aprobado;
 
 }
