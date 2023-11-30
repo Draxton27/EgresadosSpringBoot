@@ -35,6 +35,7 @@ public class EgresadoController {
     public Optional<Egresado> findById(@RequestParam(name = "id") String id) {
         return serviceEgresado.findById(id);
     }
+
     @PostMapping("/save")
     public Egresado insert(@RequestBody Egresado egresado) {
         return serviceEgresado.save(egresado);
@@ -47,10 +48,10 @@ public class EgresadoController {
     }
 
     @PostMapping("/login")
-    public String login (@RequestBody Access login){
+    public String login(@RequestBody Access login) {
         var egresado = serviceEgresado.findByCorreosAndPassword(login.getEmail(), login.getPassword());
 
-        if(egresado.isEmpty()) {
+        if (egresado.isEmpty()) {
             return "";
         }
 
@@ -68,4 +69,23 @@ public class EgresadoController {
                                            @RequestParam(defaultValue = "id") String sortBy) {
         return serviceEgresado.getAllPagination(pageNo, pageSize, sortBy);
     }
+
+    @PostMapping("/approveAll")
+    public void approveAll(@RequestBody List<String> ids) {
+
+        for(var id : ids) {
+            var egresado = serviceEgresado.findById(id);
+
+            if(egresado.isEmpty()) {
+                continue;
+            }
+
+
+
+            var egresadoObj = egresado.get();
+            egresadoObj.setAprobado(true);
+            serviceEgresado.save(egresadoObj);
+        }
+    }
+
 }
