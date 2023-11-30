@@ -17,7 +17,6 @@ import java.util.List;
 @Entity
 @Table(name = "Encuestas")
 public class Form extends Identity {
-
     private String name;
 
     @ElementCollection
