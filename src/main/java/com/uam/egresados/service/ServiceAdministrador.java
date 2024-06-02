@@ -27,6 +27,11 @@ public class ServiceAdministrador implements IServiceAdministrador, IAuthService
     }
 
     @Override
+    public Administrador save(Administrador administrador) {
+        return repo.save(administrador);
+    }
+
+    @Override
     public Optional<Administrador> authenticate(Access login) {
 
         authenticationManager.authenticate(

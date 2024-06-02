@@ -93,7 +93,7 @@ public class Egresado extends Identity implements UserDetails {
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        return List.of(new SimpleGrantedAuthority("EGRESADO"));
+        return List.of(new SimpleGrantedAuthority("ROLE_EGRESADO"));
     }
 
     @Override

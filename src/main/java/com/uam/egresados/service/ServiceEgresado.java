@@ -47,10 +47,6 @@ public class ServiceEgresado implements IServiceEgresado, IAuthService<Egresado,
         repo.deleteById(id);
     }
 
-    @Override
-    public List<Egresado> findByFirstName(String nombre) {
-        return repo.findByFirstName(nombre);
-    }
 
     @Override
     public Optional<Egresado> findByEmail(String email) {

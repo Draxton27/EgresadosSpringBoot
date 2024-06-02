@@ -13,7 +13,6 @@ public interface IServiceEgresado {
 
     void delete(String id);
 
-    List<Egresado> findByFirstName(String nombre);
 
     Optional<Egresado> findByEmail(String email);
 

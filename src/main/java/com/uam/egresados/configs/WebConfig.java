@@ -1,7 +1,8 @@
 package com.uam.egresados.configs;
 
+import com.uam.egresados.middleware.JwtTokenFilter;
+import com.uam.egresados.middleware.RoleAccessDeniedHandler;
 import com.uam.egresados.service.JwtService;
-import com.uam.egresados.service.ServiceEgresado;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -11,7 +12,9 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
+import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -19,17 +22,22 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
+import org.springframework.security.web.util.matcher.OrRequestMatcher;
+import org.springframework.security.web.util.matcher.RequestMatcher;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import org.springframework.web.servlet.HandlerExceptionResolver;
 
 
+import java.util.Arrays;
 import java.util.List;
-import java.util.logging.Logger;
 
 
 @Configuration
+@EnableWebSecurity
+@EnableGlobalMethodSecurity(prePostEnabled = true)
 public class WebConfig {
     static public final String REACT_URL = "http://localhost:5173";
     private final HandlerExceptionResolver handlerExceptionResolver;
@@ -41,6 +49,7 @@ public class WebConfig {
         this.jwtService = jwtService;
         this.userDetailsService = userDetailsService;
     }
+
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
@@ -53,6 +62,7 @@ public class WebConfig {
         source.registerCorsConfiguration("/**", configuration);
         return source;
     }
+
     public JavaMailSender getJavaMailSender() {
         var mailSender = new JavaMailSenderImpl();
         mailSender.setHost("smtp.gmail.com");
@@ -69,6 +79,7 @@ public class WebConfig {
 
         return mailSender;
     }
+
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
@@ -76,15 +87,20 @@ public class WebConfig {
                 .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(authorizeRequests ->
                         authorizeRequests
-                                .requestMatchers(HttpMethod.POST,  "/egresado/login", "/admin/login", "/egresado/register").permitAll() // Allow unauthenticated access to login endpoints
-                                .requestMatchers("/egresado/**").hasAnyRole("EGRESADO", "ADMIN") // Require USER role for egresado endpoints
-                                .requestMatchers("/admin/**").hasRole("ADMIN") // Require ADMIN role for admin endpoints
-                                .anyRequest().authenticated() // Require authentication for all other endpoints
+                                .requestMatchers(HttpMethod.POST,"/admin/create" ,"/egresado/login", "/admin/login", "/egresado/register").permitAll() // Allow unauthenticated access to log in endpoints
+                                .requestMatchers("/egresado/{id}", "/egresado/delete/{id}").hasAnyRole("ADMIN", "EGRESADO")
+                                .requestMatchers(HttpMethod.PUT, "/egresado/save").hasAnyRole("ADMIN", "EGRESADO")
+                                .anyRequest().hasRole("ADMIN")
                 )
                 .sessionManagement(sessionManagement ->
                         sessionManagement.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 )
-                .addFilterBefore(new JwtTokenFilter(handlerExceptionResolver, jwtService, userDetailsService), UsernamePasswordAuthenticationFilter.class);
+                .addFilterBefore(new JwtTokenFilter(handlerExceptionResolver, jwtService, userDetailsService, requestMatcher()), UsernamePasswordAuthenticationFilter.class)
+                .exceptionHandling(
+                        exceptionHandling ->
+                                exceptionHandling.accessDeniedHandler(new RoleAccessDeniedHandler())
+
+                );
 
         return http.build();
     }
@@ -101,7 +117,6 @@ public class WebConfig {
 
     @Bean
     AuthenticationProvider authenticationProvider() {
-
         DaoAuthenticationProvider authProvider = new DaoAuthenticationProvider();
         authProvider.setUserDetailsService(userDetailsService);
         authProvider.setPasswordEncoder(passwordEncoder());
@@ -109,4 +124,15 @@ public class WebConfig {
         return authProvider;
     }
 
+    @Bean
+    RequestMatcher requestMatcher() {
+        List<RequestMatcher> matchers = Arrays.asList(
+                new AntPathRequestMatcher("/egresado/register", "POST"),
+                new AntPathRequestMatcher("/egresado/login", "POST"),
+                new AntPathRequestMatcher("/admin/login", "POST") ,
+                new AntPathRequestMatcher("/admin/create", "POST")
+        );
+
+        return new OrRequestMatcher(matchers);
+    }
 }

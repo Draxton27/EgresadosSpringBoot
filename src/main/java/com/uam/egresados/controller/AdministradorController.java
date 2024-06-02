@@ -11,27 +11,26 @@ import com.uam.egresados.service.JwtService;
 import jakarta.validation.Valid;
 import org.springframework.http.*;
 import org.springframework.security.authentication.BadCredentialsException;
-import org.springframework.validation.FieldError;
-import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 
 @RestController
-@RequestMapping("/administrador")
+@RequestMapping("/admin")
 public class AdministradorController {
 
     private final IServiceAdministrador serviceAdministrador;
     private final IAuthService<Administrador, Access> authService;
     private final JwtService jwtService;
+    private final PasswordEncoder passwordEncoder;
 
-    public AdministradorController(IServiceAdministrador serviceAdministrador, IAuthService<Administrador, Access> authService, JwtService jwtService) {
+    public AdministradorController(IServiceAdministrador serviceAdministrador, IAuthService<Administrador, Access> authService, JwtService jwtService, PasswordEncoder passwordEncoder) {
         this.serviceAdministrador = serviceAdministrador;
         this.authService = authService;
         this.jwtService = jwtService;
+        this.passwordEncoder = passwordEncoder;
     }
 
     @GetMapping("/all")
@@ -41,7 +40,6 @@ public class AdministradorController {
 
     @PostMapping("/login")
     public ResponseEntity<RequestResponse<LogInResponse>> login(@RequestBody @Valid Access login){
-
 
         Optional<Administrador> administrador;
 
@@ -64,21 +62,12 @@ public class AdministradorController {
         var administradorObj = administrador.get();
         var token = jwtService.generateToken(administradorObj);
         var response = new RequestResponse<>(RequestStatus.success, new LogInResponse(token, jwtService.getExpirationTime()));
-        //add the headers to the response
         return ResponseEntity.ok().headers(headers).body(response);
     }
-    @ResponseStatus(HttpStatus.BAD_REQUEST)
-    @ExceptionHandler(MethodArgumentNotValidException.class)
-    public Map<String, String> beanValidationExceptionHandler(MethodArgumentNotValidException ex) {
-        Map<String,String> errors = new HashMap<>();
 
-        ex.getBindingResult().getAllErrors().forEach((error) -> {
-            var fieldName = ((FieldError)error).getField();
-            var errorMessage = error.getDefaultMessage();
-            errors.put(fieldName,errorMessage);
-        });
-
-        return errors;
+    @PostMapping("/create")
+    public ResponseEntity<RequestResponse<Administrador>> create(@RequestBody @Valid Access administrador) {
+        var admin = new Administrador(administrador.getEmail(), passwordEncoder.encode(administrador.getPassword()));
+        return ResponseEntity.ok(new RequestResponse<>(RequestStatus.success, serviceAdministrador.save(admin)));
     }
-
 }

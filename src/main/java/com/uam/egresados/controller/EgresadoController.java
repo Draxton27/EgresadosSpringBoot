@@ -2,6 +2,7 @@ package com.uam.egresados.controller;
 
 import com.uam.egresados.dto.*;
 import com.uam.egresados.error.AlreadyExistsException;
+import com.uam.egresados.error.NotSufficientPermissionsException;
 import com.uam.egresados.model.Egresado;
 import com.uam.egresados.service.IAuthService;
 import com.uam.egresados.service.IServiceEgresado;
@@ -9,13 +10,14 @@ import com.uam.egresados.service.JwtService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.*;
-import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.BadCredentialsException;
-import org.springframework.validation.FieldError;
-import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
+import java.util.logging.Logger;
 
 @RestController
 @RequestMapping("/egresado")
@@ -24,32 +26,54 @@ public class EgresadoController {
     @Qualifier("ServiceEgresado")
     private final IAuthService<Egresado, EgresadoDTO> authService;
     private final JwtService jwtService;
+    private final Logger logger = Logger.getLogger(EgresadoController.class.getName());
     public EgresadoController(IServiceEgresado serviceEgresado, @Qualifier("ServiceEgresado") IAuthService<Egresado, EgresadoDTO> authService, JwtService jwtService) {
         this.serviceEgresado = serviceEgresado;
         this.authService = authService;
         this.jwtService = jwtService;
     }
 
-    @GetMapping("/all")
+    Optional<Egresado> isSameUser(String principalName,String id) throws NotSufficientPermissionsException {
+        var egresado = serviceEgresado.findByEmail(principalName);
+
+        if (egresado.isPresent() && !egresado.get().getId().equals(id)) {
+            throw new NotSufficientPermissionsException("You are not authorized to access that resource");
+        }
+
+        return egresado;
+    }
+    boolean isAdmin() {
+        return SecurityContextHolder.getContext().getAuthentication().getAuthorities().stream().anyMatch(authority -> authority.getAuthority().equals("ADMIN"));
+    }
+
+    @GetMapping("/all/list")
     ResponseEntity<RequestResponse<List<Egresado>>> getAll() {
         return ResponseEntity.ok(new RequestResponse<>(RequestStatus.success, serviceEgresado.getAll()));
     }
 
-    @GetMapping("/getByName")
-    public ResponseEntity<RequestResponse<List<Egresado>>> findByNombre(@RequestParam(name = "primerNombre") String nombre) {
-        return ResponseEntity.ok(new RequestResponse<>(RequestStatus.success, serviceEgresado.findByFirstName(nombre)));
-    }
+    @GetMapping("/{id}")
+    public ResponseEntity<RequestResponse<Optional<Egresado>>> findById(@PathVariable String id) throws NotSufficientPermissionsException {
 
-    @GetMapping("/getById")
-    public ResponseEntity<RequestResponse<Optional<Egresado>>> findById(@RequestParam(name = "id") String id) {
-        return ResponseEntity.ok(new RequestResponse<>(RequestStatus.success, serviceEgresado.findById(id)));
+
+        if (isAdmin()){
+            return ResponseEntity.ok(new RequestResponse<>(RequestStatus.success, serviceEgresado.findById(id)));
+        }
+
+        var egresado = isSameUser(SecurityContextHolder.getContext().getAuthentication().getName(), id);
+
+        return ResponseEntity.ok(new RequestResponse<>(RequestStatus.success, egresado));
     }
 
     @PutMapping("/save")
-    public ResponseEntity<RequestResponse<Egresado>> update(@RequestBody @Valid Egresado egresado) {
+    public ResponseEntity<RequestResponse<Egresado>> update(@RequestBody @Valid Egresado egresado) throws NotSufficientPermissionsException {
+        if (isAdmin()){
+            return ResponseEntity.ok(new RequestResponse<>(RequestStatus.success, serviceEgresado.save(egresado)));
+        }
+
+        isSameUser(SecurityContextHolder.getContext().getAuthentication().getName(), egresado.getId()).get();
+
         return ResponseEntity.ok(new RequestResponse<>(RequestStatus.success, serviceEgresado.save(egresado)));
     }
-
 
     @PostMapping("/register")
     public ResponseEntity<RequestResponse<Egresado>> register(@RequestBody @Valid EgresadoDTO egresado) throws AlreadyExistsException {
@@ -64,7 +88,7 @@ public class EgresadoController {
     }
     @PostMapping("/login")
     public ResponseEntity<RequestResponse<LogInResponse>> login(@RequestBody @Valid Access login) {
-        Optional<Egresado> egresado = Optional.empty();
+        Optional<Egresado> egresado;
 
         egresado = authService.authenticate(login);
 
@@ -95,14 +119,14 @@ public class EgresadoController {
         return ResponseEntity.noContent().build();
     }
 
-    @GetMapping("/allPagination")
+    @GetMapping("/all/pagination")
     public ResponseEntity<RequestResponse<List<Egresado>>> getAllPagination(@RequestParam(defaultValue = "0") Integer pageNo,
                                            @RequestParam(defaultValue = "10") Integer pageSize,
                                            @RequestParam(defaultValue = "id") String sortBy) {
         return ResponseEntity.ok(new RequestResponse<>(RequestStatus.success, serviceEgresado.getAllPagination(pageNo, pageSize, sortBy)));
     }
 
-    @PostMapping("/approveAll")
+    @PostMapping("/all/approve")
     public ResponseEntity<RequestResponse<List<String>>> approveAll(@RequestBody @Valid List<String> ids) {
         List<String> successfullIds = new ArrayList<>();
 
@@ -121,19 +145,4 @@ public class EgresadoController {
 
         return ResponseEntity.ok(new RequestResponse<>(RequestStatus.success, successfullIds));
     }
-
-    @ResponseStatus(HttpStatus.BAD_REQUEST)
-    @ExceptionHandler(MethodArgumentNotValidException.class)
-    public Map<String, String> beanValidationExceptionHandler(MethodArgumentNotValidException ex) {
-        Map<String,String> errors = new HashMap<>();
-
-        ex.getBindingResult().getAllErrors().forEach((error) -> {
-            var fieldName = ((FieldError)error).getField();
-            var errorMessage = error.getDefaultMessage();
-            errors.put(fieldName,errorMessage);
-        });
-
-        return errors;
-    }
-
 }

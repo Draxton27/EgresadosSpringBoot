@@ -9,6 +9,6 @@ public interface IServiceAdministrador {
 
     List<Administrador> getAll();
 
-
+    Administrador save(Administrador administrador);
 
 }

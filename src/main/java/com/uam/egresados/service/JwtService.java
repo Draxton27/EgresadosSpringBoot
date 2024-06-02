@@ -10,6 +10,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Function;
+import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Value;
@@ -19,6 +20,9 @@ import org.springframework.security.core.GrantedAuthority;
 
 @Service
 public class JwtService {
+
+    private final Logger logger = Logger.getLogger(JwtService.class.getName());
+
     @Value("${security.jwt.secret-key}")
     private String secretKey;
 
@@ -66,11 +70,14 @@ public class JwtService {
 
     public boolean isTokenValid(String token, UserDetails userDetails) {
         final String username = extractUsername(token);
+        logger.info("Validating token for user: " + username);
         return (username.equals(userDetails.getUsername())) && !isTokenExpired(token);
     }
 
     private boolean isTokenExpired(String token) {
-        return extractExpiration(token).before(new Date());
+        var tokenExpiration = extractExpiration(token).before(new Date());
+        logger.info("Is expired? " + tokenExpiration);
+        return tokenExpiration;
     }
 
     private Date extractExpiration(String token) {
