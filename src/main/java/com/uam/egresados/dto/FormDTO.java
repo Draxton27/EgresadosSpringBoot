@@ -1,26 +1,19 @@
-package com.uam.egresados.model;
+package com.uam.egresados.dto;
 
-
+import com.uam.egresados.model.Question;
 import jakarta.persistence.ElementCollection;
-import jakarta.persistence.Embedded;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Table;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.Getter;
+import lombok.Setter;
 
 import java.util.List;
 import java.util.Set;
 
-@Data
-@AllArgsConstructor
-@NoArgsConstructor
-@Entity
-@Table(name = "Encuestas")
-public class Form extends Identity {
+@Getter
+@Setter
+public class FormDTO {
 
     //@JsonProperty means that when serializing it to JSON
     //it takes into account

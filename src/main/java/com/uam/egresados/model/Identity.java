@@ -8,14 +8,12 @@ import lombok.Getter;
 import lombok.Setter;
 import org.hibernate.annotations.GenericGenerator;
 
-
 //todas las clases pueden heredar esta clase para no hacerlo repetidamente
 //ya que cada clase debe tener un id
 @MappedSuperclass
 @Getter
 @Setter
 public class Identity {
-
     @Id
     @GeneratedValue(generator = "system-uuid") //system-uuid es un numero alfanumerico aleatorio.
     @GenericGenerator(name = "system-uuid", strategy = "uuid")

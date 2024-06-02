@@ -1,18 +1,25 @@
 package com.uam.egresados.service;
 
+import com.uam.egresados.dto.Access;
 import com.uam.egresados.model.Administrador;
 import com.uam.egresados.repository.IAdministradorRepository;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Optional;
 
 @Service
-public class ServiceAdministrador implements IServiceAdministrador{
+public class ServiceAdministrador implements IServiceAdministrador, IAuthService<Administrador, Access> {
 
- @Autowired
-    private IAdministradorRepository repo;
+    private final IAdministradorRepository repo;
+    private final AuthenticationManager authenticationManager;
+
+    public ServiceAdministrador(IAdministradorRepository repo, AuthenticationManager authenticationManager) {
+        this.repo = repo;
+        this.authenticationManager = authenticationManager;
+    }
 
     @Override
     public List<Administrador> getAll() {
@@ -20,12 +27,15 @@ public class ServiceAdministrador implements IServiceAdministrador{
     }
 
     @Override
-    public Optional<Administrador> findBynombreAdminAndcontrasenia(String nombreAdmin, String contrsenia) {
-        return repo.findAdministradorBynombreAdminAndcontrasenia(nombreAdmin,contrsenia);
-    }
+    public Optional<Administrador> authenticate(Access login) {
 
-    @Override
-    public Administrador save(Administrador admin) {
-        return repo.saveAndFlush(admin);
+        authenticationManager.authenticate(
+                new UsernamePasswordAuthenticationToken(
+                        login.getEmail(),
+                        login.getPassword()
+                )
+        );
+
+        return repo.findByUsername(login.getEmail());
     }
 }
