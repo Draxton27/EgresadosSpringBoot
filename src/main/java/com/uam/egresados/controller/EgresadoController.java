@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.logging.Logger;
 
@@ -24,10 +25,10 @@ import java.util.logging.Logger;
 public class EgresadoController {
     private final IServiceEgresado serviceEgresado;
     @Qualifier("ServiceEgresado")
-    private final IAuthService<Egresado, EgresadoDTO> authService;
+    private final IAuthService<Egresado, Access> authService;
     private final JwtService jwtService;
-    private final Logger logger = Logger.getLogger(EgresadoController.class.getName());
-    public EgresadoController(IServiceEgresado serviceEgresado, @Qualifier("ServiceEgresado") IAuthService<Egresado, EgresadoDTO> authService, JwtService jwtService) {
+
+    public EgresadoController(IServiceEgresado serviceEgresado, @Qualifier("ServiceEgresado") IAuthService<Egresado, Access> authService, JwtService jwtService) {
         this.serviceEgresado = serviceEgresado;
         this.authService = authService;
         this.jwtService = jwtService;
@@ -36,14 +37,18 @@ public class EgresadoController {
     Optional<Egresado> isSameUser(String principalName,String id) throws NotSufficientPermissionsException {
         var egresado = serviceEgresado.findByEmail(principalName);
 
-        if (egresado.isPresent() && !egresado.get().getId().equals(id)) {
+        if (egresado.isEmpty()) {
+            throw new NotSufficientPermissionsException("You are not authorized to access that resource");
+        }
+
+        if (!Objects.equals(egresado.get().getId(), id)) {
             throw new NotSufficientPermissionsException("You are not authorized to access that resource");
         }
 
         return egresado;
     }
     boolean isAdmin() {
-        return SecurityContextHolder.getContext().getAuthentication().getAuthorities().stream().anyMatch(authority -> authority.getAuthority().equals("ADMIN"));
+        return SecurityContextHolder.getContext().getAuthentication().getAuthorities().stream().anyMatch(authority -> authority.getAuthority().equals("ROLE_ADMIN"));
     }
 
     @GetMapping("/all/list")
@@ -54,18 +59,18 @@ public class EgresadoController {
     @GetMapping("/{id}")
     public ResponseEntity<RequestResponse<Optional<Egresado>>> findById(@PathVariable String id) throws NotSufficientPermissionsException {
 
-
         if (isAdmin()){
-            return ResponseEntity.ok(new RequestResponse<>(RequestStatus.success, serviceEgresado.findById(id)));
+            var egresado = serviceEgresado.findById(id);
+            return ResponseEntity.ok(new RequestResponse<>(RequestStatus.success, egresado));
         }
 
         var egresado = isSameUser(SecurityContextHolder.getContext().getAuthentication().getName(), id);
-
         return ResponseEntity.ok(new RequestResponse<>(RequestStatus.success, egresado));
     }
 
     @PutMapping("/save")
     public ResponseEntity<RequestResponse<Egresado>> update(@RequestBody @Valid Egresado egresado) throws NotSufficientPermissionsException {
+
         if (isAdmin()){
             return ResponseEntity.ok(new RequestResponse<>(RequestStatus.success, serviceEgresado.save(egresado)));
         }
@@ -101,11 +106,6 @@ public class EgresadoController {
         var response = new RequestResponse<>(RequestStatus.success, new LogInResponse(token, jwtService.getExpirationTime()));
 
         var headers = new HttpHeaders();
-        headers.setCacheControl(CacheControl.noStore());
-        headers.setContentType(MediaType.APPLICATION_JSON);
-        headers.set("Access-Control-Allow-Origin", "*");
-        headers.set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
-        headers.set("Access-Control-Allow-Headers", "Content-Type, Authorization");
         headers.setCacheControl(CacheControl.noStore());
         headers.setPragma("no-cache");
         headers.set("X-Content-Type-Options", "nosniff");

@@ -8,7 +8,6 @@ import jakarta.transaction.Transactional;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -16,10 +15,9 @@ import org.springframework.stereotype.Service;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
-import java.util.logging.Logger;
 
 @Service("ServiceEgresado")
-public class ServiceEgresado implements IServiceEgresado, IAuthService<Egresado, EgresadoDTO> {
+public class ServiceEgresado implements IServiceEgresado, IAuthService<Egresado,Access> {
     private final IEgresadoRepository repo;
     private final AuthenticationManager authenticationManager;
     private final PasswordEncoder passwordEncoder;
@@ -62,22 +60,19 @@ public class ServiceEgresado implements IServiceEgresado, IAuthService<Egresado,
     public Egresado signUp(EgresadoDTO egresado) {
 
         var egresadoEntity = new Egresado();
-        egresadoEntity.setPrimerNombre(egresado.getPrimerNombre());
-        egresadoEntity.setSegundoNombre(egresado.getSegundoNombre());
-        egresadoEntity.setPrimerApellido(egresado.getPrimerApellido());
-        egresadoEntity.setSegundoApellido(egresado.getSegundoApellido());
+        egresadoEntity.setNombreCompleto(egresado.getNombreCompleto());
         egresadoEntity.setFechaNacimiento(egresado.getFechaNacimiento());
         egresadoEntity.setLogInEmail(egresado.getLogInEmail());
         egresadoEntity.setPassword(passwordEncoder.encode(egresado.getPassword()));
         egresadoEntity.setCif(egresado.getCif());
         egresadoEntity.setFechaGraduacion(egresado.getFechaGraduacion());
         egresadoEntity.setCargoActual(egresado.getCargoActual());
-        egresadoEntity.setContactos(egresado.getContactos());
+        egresadoEntity.setContactosTelefonicos(egresado.getContactos());
         egresadoEntity.setCorreos(egresado.getCorreos());
         egresadoEntity.setTrabajos(egresado.getTrabajos());
         egresadoEntity.setCarreras(egresado.getCarreras());
         egresadoEntity.setEtnia(egresado.getEtnia());
-        egresadoEntity.setAprobado(true);
+        egresadoEntity.setAprobado(false);
 
         return repo.saveAndFlush(egresadoEntity);
     }
@@ -94,7 +89,6 @@ public class ServiceEgresado implements IServiceEgresado, IAuthService<Egresado,
         }
     }
 
-    private static final Logger logger = Logger.getLogger(ServiceEgresado.class.getName());
     @Override
     public Optional<Egresado> authenticate(Access login) {
 

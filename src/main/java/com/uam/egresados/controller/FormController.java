@@ -6,6 +6,8 @@ import com.uam.egresados.dto.RequestStatus;
 import com.uam.egresados.error.AlreadyExistsException;
 import com.uam.egresados.error.InternalServerErrorException;
 import com.uam.egresados.model.Form;
+import com.uam.egresados.model.Question;
+import com.uam.egresados.repository.IQuestionRepository;
 import com.uam.egresados.service.IServiceEgresado;
 import com.uam.egresados.service.IServiceForm;
 import jakarta.validation.Valid;
@@ -18,10 +20,7 @@ import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 
 import static com.uam.egresados.configs.WebConfig.REACT_URL;
 
@@ -34,10 +33,13 @@ public class FormController {
 
     private final IServiceEgresado serviceEgresado;
 
-    public FormController(IServiceForm serviceForm, JavaMailSender mailSender, IServiceEgresado serviceEgresado) {
+    private  final IQuestionRepository questionRepository;
+
+    public FormController(IServiceForm serviceForm, JavaMailSender mailSender, IServiceEgresado serviceEgresado, IQuestionRepository questionRepository) {
         this.serviceForm = serviceForm;
         this.mailSender = mailSender;
         this.serviceEgresado = serviceEgresado;
+        this.questionRepository = questionRepository;
     }
 
     @GetMapping("/all")
@@ -45,31 +47,61 @@ public class FormController {
         return ResponseEntity.ok(new RequestResponse<>(RequestStatus.success, serviceForm.getAll()));
     }
 
-    @GetMapping("/getById")
-    public ResponseEntity<RequestResponse<Optional<Form>>> findById(@RequestParam(name = "id") String id) {
+    @PostMapping("/all/approve")
+    ResponseEntity<RequestResponse<List<String>>> approveAll(@RequestBody @Valid List<String> ids) {
+        List<String> successfullIds = new ArrayList<>();
+
+        for (var id : ids) {
+            var form = serviceForm.findById(id);
+
+            if (form.isEmpty()) {
+                continue;
+            }
+
+            var formObj = form.get();
+            formObj.setPublished(true);
+
+            //sendForm(formObj);
+            serviceForm.save(formObj);
+            successfullIds.add(id);
+        }
+
+        return ResponseEntity.ok(new RequestResponse<>(RequestStatus.success, successfullIds));
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<RequestResponse<Optional<Form>>> findById(@PathVariable String id) {
+
+        var formOpt = serviceForm.findById(id);
+
+        if (formOpt.isEmpty()) {
+            return new ResponseEntity<>(new RequestResponse<>(RequestStatus.success, null), HttpStatus.NOT_FOUND);
+        }
+
+        var form = formOpt.get();
+
+        for (var question : form.getQuestions()) {
+            for(var answer : question.getAnswers()) {
+                var egresado= serviceEgresado.findById(answer.getAnsweredById());
+
+                if (egresado.isPresent()) {
+                    answer.setAnsweredByName(egresado.get().getNombreCompleto());
+                }else {
+                    answer.setAnsweredByName("Unknown");
+                }
+            }
+        }
+
         return ResponseEntity.ok(new RequestResponse<>(RequestStatus.success, serviceForm.findById(id)));
     }
 
-    @PostMapping("/save")
-    public ResponseEntity<RequestResponse<Form>> insert(@RequestBody @Valid FormDTO formDTO) throws AlreadyExistsException, InternalServerErrorException {
-
-        if (serviceForm.findByName(formDTO.getName()).isPresent()) {
-            throw new AlreadyExistsException("A form with that name already exists");
-        }
-
-        var form = new Form();
-        form.setName(formDTO.getName());
-        form.setQuestions(formDTO.getQuestions());
-        form.setAnswersCollectedFrom(formDTO.getAnswersCollectedFrom());
-
-        var newForm = serviceForm.save(form);
-
+    private void sendForm(Form f) throws InternalServerErrorException {
         for (var egresado : serviceEgresado.getAll()) {
             var message = new SimpleMailMessage();
 
             message.setTo(egresado.getLogInEmail());
-            message.setSubject("Nueva encuesta de Egresados UAM - " + newForm.getName());
-            message.setText("Contesta la entrando al siguiente link:\n" + REACT_URL + "/form_answer/" + newForm.getId());
+            message.setSubject("Nueva encuesta de Egresados UAM - " + f.getName());
+            message.setText("Contesta la entrando al siguiente link:\n" + REACT_URL + "/form_answer/" + f.getId());
 
             try {
                 mailSender.send(message);
@@ -77,8 +109,42 @@ public class FormController {
                 throw new InternalServerErrorException(ex.getMessage());
             }
         }
+    }
 
-        return ResponseEntity.status(HttpStatus.CREATED).body(new RequestResponse<>(RequestStatus.success, newForm));
+    @PostMapping("/save")
+    public ResponseEntity<RequestResponse<Form>> insert(@RequestBody @Valid FormDTO formDTO) throws AlreadyExistsException, InternalServerErrorException {
+        if (serviceForm.findByName(formDTO.getName()).isPresent()) {
+            throw new AlreadyExistsException("A form with that name already exists");
+        }
+
+        var form = new Form();
+        form.setName(formDTO.getName());
+        form.setDescription(formDTO.getDescription());
+
+        var questionObjArray = new ArrayList<Question>();
+        for (var question : formDTO.getQuestions()) {
+            var questionObj = new Question();
+            questionObj.setQuestion(question.getQuestion());
+            questionObj.setType(question.getType());
+            questionObj.setPossibleAnswers(question.getPossibleAnswers());
+            //questionObj.setAnswers(new ArrayList<>());
+            questionObj.setAnswers(question.getAnswers());
+            questionObj = questionRepository.save(questionObj);
+            questionObjArray.add(questionObj);
+        }
+
+        form.setQuestions(questionObjArray);
+        form.setAnswersCollectedFrom(new HashSet<>());
+        var newForm = serviceForm.save(form);
+
+        var response = ResponseEntity.status(HttpStatus.CREATED).body(new RequestResponse<>(RequestStatus.success, newForm));
+
+        if(!formDTO.isPublished()) {
+            return response;
+        }
+
+        sendForm(newForm);
+        return response;
     }
 
     @PutMapping("/save")

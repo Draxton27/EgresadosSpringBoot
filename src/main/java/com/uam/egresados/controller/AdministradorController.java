@@ -1,5 +1,6 @@
 package com.uam.egresados.controller;
 
+import com.uam.egresados.configs.WebConfig;
 import com.uam.egresados.dto.Access;
 import com.uam.egresados.dto.LogInResponse;
 import com.uam.egresados.dto.RequestResponse;
@@ -50,11 +51,6 @@ public class AdministradorController {
         }
 
         var headers = new HttpHeaders();
-        headers.setCacheControl(CacheControl.noStore());
-        headers.setContentType(MediaType.APPLICATION_JSON);
-        headers.set("Access-Control-Allow-Origin", "*");
-        headers.set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
-        headers.set("Access-Control-Allow-Headers", "Content-Type, Authorization");
         headers.setCacheControl(CacheControl.noStore());
         headers.setPragma("no-cache");
         headers.set("X-Content-Type-Options", "nosniff");

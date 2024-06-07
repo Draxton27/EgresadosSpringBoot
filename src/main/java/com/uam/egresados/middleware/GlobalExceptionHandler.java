@@ -9,10 +9,14 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.InsufficientAuthenticationException;
+import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
+
 import java.nio.file.AccessDeniedException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.logging.Logger;
 
 @ControllerAdvice
@@ -26,8 +30,17 @@ public class GlobalExceptionHandler {
     }
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ExceptionResponse> handleMethodArgumentNotValidException(MethodArgumentNotValidException e) {
-        logger.severe("Got MethodArgumentNotValidException: " + e.getMessage());
-        var responseBody = new ExceptionResponse(e.getMessage());
+        List<String> errors = new ArrayList<>();
+        e.getBindingResult().getAllErrors().forEach((error) -> {
+            var fieldName = ((FieldError)error).getField();
+            var errorMessage = error.getDefaultMessage();
+            errors.add(String.format("%s: %s", fieldName, errorMessage));
+        });
+
+        String joinedErrors = String.join(", ", errors);
+
+        logger.severe("Got MethodArgumentNotValidException: " + joinedErrors);
+        var responseBody = new ExceptionResponse(joinedErrors);
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(responseBody);
     }
     @ExceptionHandler(BadCredentialsException.class)
@@ -66,10 +79,13 @@ public class GlobalExceptionHandler {
         var responseBody = new ExceptionResponse("Invalid auth");
         return ResponseEntity.status(HttpStatus.FORBIDDEN).body(responseBody);
     }
+
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ExceptionResponse> handleException(Exception e) {
         logger.severe("Got " + e.getClass().getCanonicalName() + e.getMessage());
         var responseBody = new ExceptionResponse(e.getMessage());
-        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(responseBody);
+        e.printStackTrace();
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(responseBody);
     }
+
 }

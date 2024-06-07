@@ -21,14 +21,14 @@ public class FormDTO {
     //@JsonProperty(access = JsonProperty.Acess.WRITE_ONLY)
     @NotBlank
     @NotNull
-    @NotEmpty
     private String name;
 
-    @ElementCollection
-    @NotEmpty
-    @NotNull
-    private List<Question> questions;
+    private String description;
 
-    @ElementCollection
+    @NotNull
+    private List<QuestionDTO> questions;
+
     private Set<String> answersCollectedFrom;
+
+    private boolean published;
 }

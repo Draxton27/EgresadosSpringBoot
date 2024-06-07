@@ -27,35 +27,13 @@ import java.util.Set;
 @AllArgsConstructor
 public class Egresado extends Identity implements UserDetails {
 
-    @NotBlank
-    @NotNull
-    @NotEmpty
-    @Pattern(regexp = "^[A-Za-z]+$")
-    private String primerNombre;
-
-    @NotBlank
-    @NotNull
-    @NotEmpty
-    @Pattern(regexp = "^[A-Za-z]+$" )
-    private String segundoNombre;
-
-    @NotBlank
-    @NotNull
-    @NotEmpty
-    @Pattern(regexp = "^[A-Za-z]+$" )
-    private String primerApellido;
-
-    @NotBlank
-    @NotNull
-    @NotEmpty
-    @Pattern(regexp = "^[A-Za-z]+$" )
-    private String segundoApellido;
-
+    @Pattern(regexp="^[\\p{L}\\s]+$")
+    private String nombreCompleto;
 
     @NotNull
     private LocalDate fechaNacimiento;
 
-    @Pattern(regexp = "^[0-9]+$")
+    @Pattern(regexp = "^[0-9]+$", message = "El campo CIF solo puede contener números")
     private String cif;
 
     @PastOrPresent
@@ -70,23 +48,23 @@ public class Egresado extends Identity implements UserDetails {
     @NotNull
     @NotEmpty
     @NotBlank
-    @Pattern(regexp = "^[\\w-.]+@([\\w-]+\\.)+[\\w-]{2,4}$")
+    @Pattern(regexp = "^[\\w-.]+@([\\w-]+\\.)+[\\w-]{2,4}$", message = "Email invalido")
     private String logInEmail;
 
     @ElementCollection
-    private Set<Telefono> contactos;
+    private Set<String> contactosTelefonicos;
 
     @ElementCollection
-    private Set<Correo> correos;
+    private Set<String> correos;
 
     @ElementCollection
     private Set<Posicion> trabajos;
 
     @ElementCollection
-    private Set<Carrera> carreras;
+    private Set<String> carreras;
 
     @NotNull
-    private Etnia etnia;
+    private String etnia;
 
     @NotNull
     private Boolean aprobado;
@@ -99,11 +77,6 @@ public class Egresado extends Identity implements UserDetails {
     @Override
     public String getUsername() {
         return logInEmail;
-    }
-
-    @Override
-    public String getPassword() {
-        return password;
     }
 
     @Override
@@ -122,7 +95,13 @@ public class Egresado extends Identity implements UserDetails {
     }
 
     @Override
+    public String getPassword() {
+        return password;
+    }
+
+
+    @Override
     public boolean isEnabled() {
-        return true;
+        return aprobado;
     }
 }

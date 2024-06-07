@@ -12,36 +12,17 @@ import java.util.Set;
 @Getter
 @Setter
 public class EgresadoDTO {
-    @NotBlank
-    @NotNull
-    @NotEmpty
-    @Pattern(regexp = "^[A-Za-z]+$")
-    private String primerNombre;
 
-    @NotBlank
-    @NotNull
-    @NotEmpty
-    @Pattern(regexp = "^[A-Za-z]+$" )
-    private String segundoNombre;
+    @Pattern(regexp="^[\\p{L}\\s]+$")
+    private String nombreCompleto;
 
-    @NotBlank
-    @NotNull
-    @NotEmpty
-    @Pattern(regexp = "^[A-Za-z]+$" )
-    private String primerApellido;
-
-    @NotBlank
-    @NotNull
-    @NotEmpty
-    @Pattern(regexp = "^[A-Za-z]+$" )
-    private String segundoApellido;
 
 
     @NotNull
     private LocalDate fechaNacimiento;
 
 
-    @Pattern(regexp = "^[0-9]+$")
+    @Pattern(regexp = "^[0-9]+$", message = "El campo CIF solo puede contener números")
     private String cif;
 
     @PastOrPresent
@@ -56,23 +37,19 @@ public class EgresadoDTO {
     @NotNull
     @NotEmpty
     @NotBlank
-    @Pattern(regexp = "^[\\w-.]+@([\\w-]+\\.)+[\\w-]{2,4}$")
+    @Pattern(regexp = "^[\\w-.]+@([\\w-]+\\.)+[\\w-]{2,4}$", message = "Email invalido")
     private String logInEmail;
 
-    @ElementCollection
-    private Set<Telefono> contactos;
+    private Set<String> contactos;
 
-    @ElementCollection
-    private Set<Correo> correos;
+    private Set<String> correos;
 
-    @ElementCollection
     private Set<Posicion> trabajos;
 
-    @ElementCollection
-    private Set<Carrera> carreras;
+    private Set<String> carreras;
 
     @NotNull
-    private Etnia etnia;
+    private String etnia;
 
     @NotNull
     private Boolean aprobado;

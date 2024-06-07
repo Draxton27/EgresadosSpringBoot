@@ -12,11 +12,11 @@ import java.io.IOException;
 
 public class RoleAccessDeniedHandler implements AccessDeniedHandler {
     @Override
-    public void handle(HttpServletRequest request, HttpServletResponse response, AccessDeniedException accessDeniedException) throws IOException, ServletException {
+    public void handle(HttpServletRequest request, HttpServletResponse response, AccessDeniedException accessDeniedException) throws IOException {
         response.setStatus(HttpServletResponse.SC_FORBIDDEN);
         response.setContentType("application/json");
 
-        ExceptionResponse exceptionResponse = new ExceptionResponse("Forbidden");
+        ExceptionResponse exceptionResponse = new ExceptionResponse("Not sufficent permissions");
         ObjectMapper mapper = new ObjectMapper();
         String json = mapper.writeValueAsString(exceptionResponse);
 
