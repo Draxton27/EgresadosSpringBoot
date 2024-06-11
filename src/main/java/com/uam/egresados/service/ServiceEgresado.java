@@ -73,6 +73,7 @@ public class ServiceEgresado implements IServiceEgresado, IAuthService<Egresado,
         egresadoEntity.setCarreras(egresado.getCarreras());
         egresadoEntity.setEtnia(egresado.getEtnia());
         egresadoEntity.setAprobado(false);
+        egresadoEntity.setResumeLink("");
 
         return repo.saveAndFlush(egresadoEntity);
     }

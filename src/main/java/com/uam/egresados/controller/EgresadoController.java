@@ -4,6 +4,7 @@ import com.uam.egresados.dto.*;
 import com.uam.egresados.error.AlreadyExistsException;
 import com.uam.egresados.error.NotSufficientPermissionsException;
 import com.uam.egresados.model.Egresado;
+import com.uam.egresados.service.FileUploadService;
 import com.uam.egresados.service.IAuthService;
 import com.uam.egresados.service.IServiceEgresado;
 import com.uam.egresados.service.JwtService;
@@ -13,12 +14,12 @@ import org.springframework.http.*;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.logging.Logger;
 
 @RestController
 @RequestMapping("/egresado")
@@ -28,10 +29,13 @@ public class EgresadoController {
     private final IAuthService<Egresado, Access> authService;
     private final JwtService jwtService;
 
-    public EgresadoController(IServiceEgresado serviceEgresado, @Qualifier("ServiceEgresado") IAuthService<Egresado, Access> authService, JwtService jwtService) {
+    private final FileUploadService fileUploadService;
+
+    public EgresadoController(IServiceEgresado serviceEgresado, @Qualifier("ServiceEgresado") IAuthService<Egresado, Access> authService, JwtService jwtService, FileUploadService fileUploadService) {
         this.serviceEgresado = serviceEgresado;
         this.authService = authService;
         this.jwtService = jwtService;
+        this.fileUploadService = fileUploadService;
     }
 
     Optional<Egresado> isSameUser(String principalName,String id) throws NotSufficientPermissionsException {
@@ -65,6 +69,8 @@ public class EgresadoController {
         }
 
         var egresado = isSameUser(SecurityContextHolder.getContext().getAuthentication().getName(), id);
+
+
         return ResponseEntity.ok(new RequestResponse<>(RequestStatus.success, egresado));
     }
 
@@ -75,9 +81,39 @@ public class EgresadoController {
             return ResponseEntity.ok(new RequestResponse<>(RequestStatus.success, serviceEgresado.save(egresado)));
         }
 
-        isSameUser(SecurityContextHolder.getContext().getAuthentication().getName(), egresado.getId()).get();
+        isSameUser(SecurityContextHolder.getContext().getAuthentication().getName(), egresado.getId());
 
         return ResponseEntity.ok(new RequestResponse<>(RequestStatus.success, serviceEgresado.save(egresado)));
+    }
+
+    @PostMapping("/{id}/resume")
+    public ResponseEntity<RequestResponse<String>> uploadResume(@RequestPart("resume") MultipartFile resume, @PathVariable String id) throws NotSufficientPermissionsException {
+
+        if(resume == null || resume.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new RequestResponse<>(RequestStatus.error, "Resume File is required"));
+        }
+
+        var egresado = serviceEgresado.findById(id);
+
+        if(isAdmin()) {
+            var url = fileUploadService.uploadFile(resume);
+            if (egresado.isPresent()){
+                egresado.get().setResumeLink(url.toString());
+                serviceEgresado.save(egresado.get());
+            }
+        }
+
+
+        isSameUser(SecurityContextHolder.getContext().getAuthentication().getName(), id);
+
+
+        var url = fileUploadService.uploadFile(resume);
+        if (egresado.isPresent()){
+            egresado.get().setResumeLink(url.toString());
+            serviceEgresado.save(egresado.get());
+        }
+
+        return ResponseEntity.status(HttpStatus.CREATED).body(new RequestResponse<>(RequestStatus.success, url.toString()));
     }
 
     @PostMapping("/register")

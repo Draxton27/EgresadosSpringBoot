@@ -2,6 +2,7 @@ package com.uam.egresados.model;
 
 import jakarta.persistence.ElementCollection;
 import jakarta.persistence.Entity;
+import jakarta.persistence.Lob;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.*;
 import lombok.*;
@@ -9,6 +10,7 @@ import org.hibernate.proxy.HibernateProxy;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDate;
 import java.util.Collection;
@@ -26,7 +28,6 @@ import java.util.Set;
 @NoArgsConstructor
 @AllArgsConstructor
 public class Egresado extends Identity implements UserDetails {
-
     @Pattern(regexp="^[\\p{L}\\s]+$")
     private String nombreCompleto;
 
@@ -68,6 +69,8 @@ public class Egresado extends Identity implements UserDetails {
 
     @NotNull
     private Boolean aprobado;
+
+    private String resumeLink;
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {

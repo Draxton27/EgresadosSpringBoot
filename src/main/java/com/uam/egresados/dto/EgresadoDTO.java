@@ -5,8 +5,10 @@ import jakarta.persistence.ElementCollection;
 import jakarta.validation.constraints.*;
 import lombok.Getter;
 import lombok.Setter;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDate;
+import java.util.Optional;
 import java.util.Set;
 
 @Getter
@@ -15,8 +17,6 @@ public class EgresadoDTO {
 
     @Pattern(regexp="^[\\p{L}\\s]+$")
     private String nombreCompleto;
-
-
 
     @NotNull
     private LocalDate fechaNacimiento;
@@ -47,6 +47,8 @@ public class EgresadoDTO {
     private Set<Posicion> trabajos;
 
     private Set<String> carreras;
+
+    private String resume;
 
     @NotNull
     private String etnia;

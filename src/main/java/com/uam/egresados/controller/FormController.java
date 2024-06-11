@@ -8,6 +8,7 @@ import com.uam.egresados.error.InternalServerErrorException;
 import com.uam.egresados.model.Form;
 import com.uam.egresados.model.Question;
 import com.uam.egresados.repository.IQuestionRepository;
+import com.uam.egresados.service.FileUploadService;
 import com.uam.egresados.service.IServiceEgresado;
 import com.uam.egresados.service.IServiceForm;
 import jakarta.validation.Valid;
@@ -34,6 +35,7 @@ public class FormController {
     private final IServiceEgresado serviceEgresado;
 
     private  final IQuestionRepository questionRepository;
+
 
     public FormController(IServiceForm serviceForm, JavaMailSender mailSender, IServiceEgresado serviceEgresado, IQuestionRepository questionRepository) {
         this.serviceForm = serviceForm;
@@ -71,11 +73,10 @@ public class FormController {
 
     @GetMapping("/{id}")
     public ResponseEntity<RequestResponse<Optional<Form>>> findById(@PathVariable String id) {
-
         var formOpt = serviceForm.findById(id);
 
         if (formOpt.isEmpty()) {
-            return new ResponseEntity<>(new RequestResponse<>(RequestStatus.success, null), HttpStatus.NOT_FOUND);
+            return ResponseEntity.ok(new RequestResponse<>(RequestStatus.success, formOpt));
         }
 
         var form = formOpt.get();
@@ -92,7 +93,7 @@ public class FormController {
             }
         }
 
-        return ResponseEntity.ok(new RequestResponse<>(RequestStatus.success, serviceForm.findById(id)));
+        return ResponseEntity.ok(new RequestResponse<>(RequestStatus.success, Optional.of(form)));
     }
 
     private void sendForm(Form f) throws InternalServerErrorException {
