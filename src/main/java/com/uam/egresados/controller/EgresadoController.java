@@ -8,6 +8,7 @@ import com.uam.egresados.service.FileUploadService;
 import com.uam.egresados.service.IAuthService;
 import com.uam.egresados.service.IServiceEgresado;
 import com.uam.egresados.service.JwtService;
+import com.uploadcare.upload.UploadFailureException;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.*;
@@ -16,6 +17,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -28,7 +30,6 @@ public class EgresadoController {
     @Qualifier("ServiceEgresado")
     private final IAuthService<Egresado, Access> authService;
     private final JwtService jwtService;
-
     private final FileUploadService fileUploadService;
 
     public EgresadoController(IServiceEgresado serviceEgresado, @Qualifier("ServiceEgresado") IAuthService<Egresado, Access> authService, JwtService jwtService, FileUploadService fileUploadService) {
@@ -63,6 +64,10 @@ public class EgresadoController {
     @GetMapping("/{id}")
     public ResponseEntity<RequestResponse<Optional<Egresado>>> findById(@PathVariable String id) throws NotSufficientPermissionsException {
 
+        if(id.length() < 32) {
+            return ResponseEntity.badRequest().body(new RequestResponse<>(RequestStatus.error,Optional.empty()));
+        }
+
         if (isAdmin()){
             var egresado = serviceEgresado.findById(id);
             return ResponseEntity.ok(new RequestResponse<>(RequestStatus.success, egresado));
@@ -87,7 +92,7 @@ public class EgresadoController {
     }
 
     @PostMapping("/{id}/resume")
-    public ResponseEntity<RequestResponse<String>> uploadResume(@RequestPart("resume") MultipartFile resume, @PathVariable String id) throws NotSufficientPermissionsException {
+    public ResponseEntity<RequestResponse<String>> uploadResume(@RequestPart("resume") MultipartFile resume, @PathVariable String id) throws NotSufficientPermissionsException, UploadFailureException, IOException {
 
         if(resume == null || resume.isEmpty()) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new RequestResponse<>(RequestStatus.error, "Resume File is required"));
@@ -96,24 +101,22 @@ public class EgresadoController {
         var egresado = serviceEgresado.findById(id);
 
         if(isAdmin()) {
-            var url = fileUploadService.uploadFile(resume);
             if (egresado.isPresent()){
-                egresado.get().setResumeLink(url.toString());
+                var url = fileUploadService.uploadFile(resume);
+                egresado.get().setResumeLink(url);
                 serviceEgresado.save(egresado.get());
+                return ResponseEntity.status(HttpStatus.CREATED).body(new RequestResponse<>(RequestStatus.success, url));
             }
         }
 
-
         isSameUser(SecurityContextHolder.getContext().getAuthentication().getName(), id);
-
-
         var url = fileUploadService.uploadFile(resume);
         if (egresado.isPresent()){
-            egresado.get().setResumeLink(url.toString());
+            egresado.get().setResumeLink(url);
             serviceEgresado.save(egresado.get());
         }
 
-        return ResponseEntity.status(HttpStatus.CREATED).body(new RequestResponse<>(RequestStatus.success, url.toString()));
+        return ResponseEntity.status(HttpStatus.CREATED).body(new RequestResponse<>(RequestStatus.success, url));
     }
 
     @PostMapping("/register")
