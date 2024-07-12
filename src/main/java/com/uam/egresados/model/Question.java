@@ -3,7 +3,6 @@ package com.uam.egresados.model;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 import lombok.*;
 import org.hibernate.proxy.HibernateProxy;
@@ -17,7 +16,8 @@ import java.util.Objects;
 @ToString
 @RequiredArgsConstructor
 @AllArgsConstructor
-public class Question extends Identity{
+public class Question extends Identity {
+
     @NotBlank(message = "Question can't be empty")
     @NotNull
     private String question;
@@ -32,10 +32,11 @@ public class Question extends Identity{
     private QuestionType type;
 
     @ElementCollection
-    private List<String> possibleAnswers ;
+    private List<String> possibleAnswers;
 
     @ElementCollection
-    private List<Answer> answers;
+    private List<String> answers;
+
     @Override
     public final boolean equals(Object o) {
         if (this == o) return true;
@@ -46,6 +47,7 @@ public class Question extends Identity{
         Question question = (Question) o;
         return getId() != null && Objects.equals(getId(), question.getId());
     }
+
     @Override
     public final int hashCode() {
         return this instanceof HibernateProxy ? ((HibernateProxy) this).getHibernateLazyInitializer().getPersistentClass().hashCode() : getClass().hashCode();

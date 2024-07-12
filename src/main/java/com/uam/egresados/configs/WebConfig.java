@@ -27,7 +27,6 @@ import org.springframework.security.web.util.matcher.RequestMatcher;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
-import org.springframework.web.filter.CorsFilter;
 import org.springframework.web.servlet.HandlerExceptionResolver;
 
 import java.util.Arrays;
@@ -88,9 +87,12 @@ public class WebConfig {
                 .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(authorizeRequests ->
                         authorizeRequests
-                                .requestMatchers(HttpMethod.POST,"/admin/create" ,"/egresado/login", "/admin/login", "/egresado/register").permitAll() // Allow unauthenticated access to log in endpoints
-                                .requestMatchers("/egresado/{id}", "/egresado/delete/{id}").hasAnyRole("ADMIN", "EGRESADO")
+                                .requestMatchers(HttpMethod.POST, "/admin/create", "/egresado/login", "/admin/login", "/egresado/register").permitAll() // Allow unauthenticated access to log in endpoints
+                                .requestMatchers("/egresado/{id}").hasAnyRole("ADMIN", "EGRESADO")
                                 .requestMatchers(HttpMethod.PUT, "/egresado/save").hasAnyRole("ADMIN", "EGRESADO")
+                                .requestMatchers(HttpMethod.PUT, "/form/save").hasAnyRole("ADMIN", "EGRESADO")
+                                .requestMatchers(HttpMethod.GET, "/form/all/unanswered").hasAnyRole("ADMIN", "EGRESADO")
+                                .requestMatchers(HttpMethod.GET, "/form/{id}").hasAnyRole("ADMIN", "EGRESADO")
                                 .anyRequest().hasRole("ADMIN")
                 )
                 .sessionManagement(sessionManagement ->
@@ -130,7 +132,7 @@ public class WebConfig {
         List<RequestMatcher> matchers = Arrays.asList(
                 new AntPathRequestMatcher("/egresado/register", "POST"),
                 new AntPathRequestMatcher("/egresado/login", "POST"),
-                new AntPathRequestMatcher("/admin/login", "POST") ,
+                new AntPathRequestMatcher("/admin/login", "POST"),
                 new AntPathRequestMatcher("/admin/create", "POST")
         );
 

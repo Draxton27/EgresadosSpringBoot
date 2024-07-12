@@ -5,10 +5,10 @@ import com.uam.egresados.dto.RequestResponse;
 import com.uam.egresados.dto.RequestStatus;
 import com.uam.egresados.error.AlreadyExistsException;
 import com.uam.egresados.error.InternalServerErrorException;
+import com.uam.egresados.error.NotSufficientPermissionsException;
 import com.uam.egresados.model.Form;
 import com.uam.egresados.model.Question;
 import com.uam.egresados.repository.IQuestionRepository;
-import com.uam.egresados.service.FileUploadService;
 import com.uam.egresados.service.IServiceEgresado;
 import com.uam.egresados.service.IServiceForm;
 import jakarta.validation.Valid;
@@ -17,11 +17,15 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.mail.MailException;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.*;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import java.util.stream.Collectors;
 
 import static com.uam.egresados.configs.WebConfig.REACT_URL;
 
@@ -34,7 +38,7 @@ public class FormController {
 
     private final IServiceEgresado serviceEgresado;
 
-    private  final IQuestionRepository questionRepository;
+    private final IQuestionRepository questionRepository;
 
 
     public FormController(IServiceForm serviceForm, JavaMailSender mailSender, IServiceEgresado serviceEgresado, IQuestionRepository questionRepository) {
@@ -48,6 +52,45 @@ public class FormController {
     ResponseEntity<RequestResponse<List<Form>>> getAll() {
         return ResponseEntity.ok(new RequestResponse<>(RequestStatus.success, serviceForm.getAll()));
     }
+
+    @GetMapping("/all/unanswered")
+    ResponseEntity<RequestResponse<List<Form>>> getAllUnanswered() throws NotSufficientPermissionsException {
+
+        var userRole = SecurityContextHolder.getContext().getAuthentication().getAuthorities().stream().findFirst();
+
+        if (userRole.isEmpty()) {
+            throw new NotSufficientPermissionsException("You are not authorized to access that resource");
+        }
+
+        var userRoleName = userRole.get().getAuthority();
+
+        var allForms = serviceForm.getAll();
+
+        Logger.getGlobal().log(Level.INFO, userRoleName);
+
+        switch (userRoleName) {
+            case "ROLE_ADMIN":
+                return ResponseEntity.ok(new RequestResponse<>(RequestStatus.success, allForms));
+            case "ROLE_EGRESADO":
+                var userEmail = SecurityContextHolder.getContext().getAuthentication().getName();
+
+                var filteredForms = allForms
+                        .stream()
+                        .filter(
+                                form ->
+                                        form.isPublished() &&
+                                                form.getAnswersCollectedFrom()
+                                                        .stream()
+                                                        .noneMatch(emailId -> emailId == userEmail)
+                        ).collect(Collectors.toList());
+
+                return ResponseEntity.ok(new RequestResponse<>(RequestStatus.success, filteredForms));
+        }
+
+
+        throw new NotSufficientPermissionsException("You are not authorized to access that resource");
+    }
+
 
     @PostMapping("/all/approve")
     ResponseEntity<RequestResponse<List<String>>> approveAll(@RequestBody @Valid List<String> ids) {
@@ -81,18 +124,6 @@ public class FormController {
 
         var form = formOpt.get();
 
-        for (var question : form.getQuestions()) {
-            for(var answer : question.getAnswers()) {
-                var egresado= serviceEgresado.findById(answer.getAnsweredById());
-
-                if (egresado.isPresent()) {
-                    answer.setAnsweredByName(egresado.get().getNombreCompleto());
-                }else {
-                    answer.setAnsweredByName("Unknown");
-                }
-            }
-        }
-
         return ResponseEntity.ok(new RequestResponse<>(RequestStatus.success, Optional.of(form)));
     }
 
@@ -114,11 +145,13 @@ public class FormController {
 
     @PostMapping("/save")
     public ResponseEntity<RequestResponse<Form>> insert(@RequestBody @Valid FormDTO formDTO) throws AlreadyExistsException, InternalServerErrorException {
+
         if (serviceForm.findByName(formDTO.getName()).isPresent()) {
             throw new AlreadyExistsException("A form with that name already exists");
         }
 
         var form = new Form();
+
         form.setName(formDTO.getName());
         form.setDescription(formDTO.getDescription());
 
@@ -128,19 +161,20 @@ public class FormController {
             questionObj.setQuestion(question.getQuestion());
             questionObj.setType(question.getType());
             questionObj.setPossibleAnswers(question.getPossibleAnswers());
-            //questionObj.setAnswers(new ArrayList<>());
-            questionObj.setAnswers(question.getAnswers());
+            questionObj.setAnswers(new ArrayList<>());
             questionObj = questionRepository.save(questionObj);
             questionObjArray.add(questionObj);
         }
 
         form.setQuestions(questionObjArray);
         form.setAnswersCollectedFrom(new HashSet<>());
+        form.setPublished(formDTO.isPublished());
+
         var newForm = serviceForm.save(form);
 
         var response = ResponseEntity.status(HttpStatus.CREATED).body(new RequestResponse<>(RequestStatus.success, newForm));
 
-        if(!formDTO.isPublished()) {
+        if (!formDTO.isPublished()) {
             return response;
         }
 
@@ -149,8 +183,22 @@ public class FormController {
     }
 
     @PutMapping("/save")
-    public ResponseEntity<RequestResponse<Form>> update(@RequestBody @Valid Form form) {
-        return ResponseEntity.ok(new RequestResponse<>(RequestStatus.success, serviceForm.save(form)));
+    public ResponseEntity<RequestResponse<String>> update(@RequestBody @Valid Form form) {
+        String authenticatedUser = SecurityContextHolder.getContext().getAuthentication().getName();
+
+        var responded = form.getAnswersCollectedFrom();
+
+        responded.add(authenticatedUser);
+        form.setAnswersCollectedFrom(responded);
+
+        for (var question : form.getQuestions()) {
+            questionRepository.save(question);
+        }
+
+        var savedForm = serviceForm.save(form);
+
+
+        return ResponseEntity.ok(new RequestResponse<>(RequestStatus.success, savedForm.getId()));
     }
 
     @DeleteMapping("/delete/{id}")
@@ -158,18 +206,18 @@ public class FormController {
         serviceForm.delete(id);
         return ResponseEntity.noContent().build();
     }
+
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public Map<String, String> beanValidationExceptionHandler(MethodArgumentNotValidException ex) {
-        Map<String,String> errors = new HashMap<>();
+        Map<String, String> errors = new HashMap<>();
 
         ex.getBindingResult().getAllErrors().forEach((error) -> {
-            var fieldName = ((FieldError)error).getField();
+            var fieldName = ((FieldError) error).getField();
             var errorMessage = error.getDefaultMessage();
-            errors.put(fieldName,errorMessage);
+            errors.put(fieldName, errorMessage);
         });
 
         return errors;
     }
-
 }

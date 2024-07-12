@@ -9,7 +9,7 @@ import java.util.List;
 import java.util.Optional;
 
 @Service
-public class ServiceForm implements IServiceForm{
+public class ServiceForm implements IServiceForm {
 
     private final IFormRepository repo;
 
@@ -19,7 +19,7 @@ public class ServiceForm implements IServiceForm{
 
     @Override
     public List<Form> getAll() {
-        return repo.findAll();
+        return repo.findAllWithQuestions();
     }
 
     @Override

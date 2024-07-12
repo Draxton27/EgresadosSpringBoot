@@ -1,8 +1,6 @@
 package com.uam.egresados.dto;
 
-import com.uam.egresados.model.Answer;
 import com.uam.egresados.model.QuestionType;
-import jakarta.persistence.ElementCollection;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
@@ -26,9 +24,17 @@ public class QuestionDTO {
     @NotNull
     private QuestionType type;
 
-
     private List<String> possibleAnswers;
 
+    private List<String> answers;
 
-    private List<Answer> answers;
+    @Override
+    public String toString() {
+        return "QuestionDTO{" +
+                "question='" + question + '\'' +
+                ", type=" + type +
+                ", possibleAnswers=" + possibleAnswers +
+                ", answers=" + answers +
+                '}';
+    }
 }
