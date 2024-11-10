@@ -16,9 +16,8 @@ public class ServiceFormRecord implements IServiceFormRecord {
     private IFormRecordRepository formRecordRepository;
 
     @Override
-    @Transactional
-    public FormRecord saveFormRecord(FormRecord formRecord) {
-        return formRecordRepository.saveAndFlush(formRecord);
+    public List<FormRecord> getAll() {
+        return formRecordRepository.findAll();
     }
 
     @Override
