@@ -8,8 +8,6 @@ import java.util.Optional;
 public interface IServiceFormRecord {
     List<FormRecord> getAll();
 
-    FormRecord save(FormRecord formRecord);
-
     Optional<FormRecord> findById(String id);
 
     Optional<FormRecord> findByName(String name);

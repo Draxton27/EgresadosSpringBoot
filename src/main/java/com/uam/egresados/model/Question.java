@@ -37,6 +37,13 @@ public class Question extends Identity {
     @ElementCollection
     private List<String> answers;
 
+    /* 
+    // Response history's one-to-many bidirectional relationship. (Use if necessary) 
+    @OneToMany(mappedBy = "question", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    @ToString.Exclude
+    private List<FormRecord> formRecord;
+    */
+
     @Override
     public final boolean equals(Object o) {
         if (this == o) return true;

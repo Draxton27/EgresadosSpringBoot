@@ -13,7 +13,6 @@ import java.nio.file.Files;
 
 @Service
 public class FileUploadService {
-
     @Value("${uploadcare.public_key}")
     private String publicKey;
 
@@ -24,6 +23,7 @@ public class FileUploadService {
         Files.write(output.toPath(),byteArray);
         return output;
     }
+
     public String uploadFile(MultipartFile file) throws IOException, UploadFailureException {
         var file_bytes = file.getBytes();
         var localFile = createFileOnDisk(file_bytes, file.getOriginalFilename());

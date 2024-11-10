@@ -9,9 +9,6 @@ import java.util.Optional;
 
 @Repository
 public interface IEgresadoRepository extends JpaRepository<Egresado, String> {
-
-
     @Query("select e from Egresado e where e.logInEmail = :email")
     Optional<Egresado> findByEmail(String email);
-
 }

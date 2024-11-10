@@ -13,12 +13,11 @@ public interface IServiceEgresado {
 
     void delete(String id);
 
-
     Optional<Egresado> findByEmail(String email);
 
     List<Egresado> getAllPagination(Integer pageNo, Integer pageSize, String sortBy);
 
-     Optional<Egresado> findById(String id);
-
-     Egresado signUp(EgresadoDTO egresadoDTO);
+    Optional<Egresado> findById(String id);
+    
+    Egresado signUp(EgresadoDTO egresadoDTO);
 }
