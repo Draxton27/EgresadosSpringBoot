@@ -1,10 +1,6 @@
 package com.uam.egresados.controller;
 
-import com.uam.egresados.configs.WebConfig;
-import com.uam.egresados.dto.Access;
-import com.uam.egresados.dto.LogInResponse;
-import com.uam.egresados.dto.RequestResponse;
-import com.uam.egresados.dto.RequestStatus;
+import com.uam.egresados.dto.*;
 import com.uam.egresados.model.Administrador;
 import com.uam.egresados.service.IAuthService;
 import com.uam.egresados.service.IServiceAdministrador;
@@ -62,8 +58,8 @@ public class AdministradorController {
     }
 
     @PostMapping("/create")
-    public ResponseEntity<RequestResponse<Administrador>> create(@RequestBody @Valid Access administrador) {
-        var admin = new Administrador(administrador.getEmail(), passwordEncoder.encode(administrador.getPassword()));
+    public ResponseEntity<RequestResponse<Administrador>> create(@RequestBody @Valid Access administrator) {
+        var admin = new Administrador(administrator.getEmail(), passwordEncoder.encode(administrator.getPassword()));
         return ResponseEntity.ok(new RequestResponse<>(RequestStatus.success, serviceAdministrador.save(admin)));
     }
 }

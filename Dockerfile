@@ -39,7 +39,6 @@ COPY ddl-scripts/entrypoint.sh /app/entrypoint.sh
 # Make entrypoint script executable
 RUN chmod +x /app/entrypoint.sh
 
-
 # Expose port for Spring Boot application
 EXPOSE 8080
 

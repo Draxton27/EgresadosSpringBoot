@@ -9,6 +9,6 @@ import java.util.Optional;
 
 @Repository
 public interface IFormRecordRepository extends JpaRepository<FormRecord, String> {
-    @Query("select f from FormRecord f where f.name = :name")
+    @Query("select f from FormRecord f where f.form.name = :name")
     Optional<FormRecord> findByNombre(String name);
 }
