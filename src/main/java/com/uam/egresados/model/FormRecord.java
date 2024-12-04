@@ -1,7 +1,11 @@
 package com.uam.egresados.model;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotNull;
 import lombok.*;
+import org.hibernate.proxy.HibernateProxy;
+
+import java.util.Objects;
 
 @Entity
 @Table(name = "Record_Encuesta")

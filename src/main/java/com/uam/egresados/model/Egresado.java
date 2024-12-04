@@ -20,6 +20,7 @@ import java.util.Set;
 
 
 
+@EqualsAndHashCode(callSuper = true)
 @Entity
 @Table(name = "Egresado")
 @Data
